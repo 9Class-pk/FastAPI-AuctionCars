@@ -1,13 +1,15 @@
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from app.models.user import *
-from app.models.auction import *
-from app.models.car import *
-from app.models.bid import *
-from app.models.feedback import *
+from app.api.endpoints.users import *
+from app.api.endpoints.auctions import *
+from app.api.endpoints.cars import *
+from app.api.endpoints.bids import *
+from app.api.endpoints.feedback import *
+from app.api.endpoints.brands import *
+from app.db.models import Brand, UserProfile, Auction, Car, Bid, Feedback
 from alembic import context
-from app.core.database import Base
+from app.db.database import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
