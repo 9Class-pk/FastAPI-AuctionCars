@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 
-class UserProfileSchema(BaseModel):
+class UserProfileOutSchema(BaseModel):
     id: int
     user_name: str
     email: EmailStr
@@ -13,6 +13,18 @@ class UserProfileSchema(BaseModel):
     phone_number: Optional[int]
     status : StatusChoices
     created_date : datetime
+    password: str
+
+    class Config:
+        from_attributes = True
+
+
+class UserProfileCreateSchema(BaseModel):
+    user_name: str
+    email: EmailStr
+    age: Optional[int] = None
+    phone_number: Optional[int] = None
+    status: StatusChoices
     password: str
 
     class Config:

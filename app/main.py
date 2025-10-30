@@ -31,6 +31,7 @@ auction = FastAPI()
 
 
 auction.include_router(users.user_router)
+auction.include_router(auth.auth_router)
 auction.include_router(cars.car_router)
 auction.include_router(auctions.auction_router)
 auction.include_router(bids.bid_router)

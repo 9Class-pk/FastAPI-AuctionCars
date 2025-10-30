@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Depends, APIRouter, Security
 from app.db.models import UserProfile
-from app.db.schemas import UserProfileSchema
+from app.db.schemas import UserProfileOutSchema, UserProfileCreateSchema, UserProfileLoginSchema
 from app.db.database import  SessionLocal
 from sqlalchemy.orm import Session
 from typing import List
@@ -19,21 +19,21 @@ async def get_db():
 user_router = APIRouter(prefix='/user', tags=['UserProfile'])
 
 
-@user_router.post("/", response_model=UserProfileSchema)
-async def create_user(user_data: UserProfileSchema, db:Session = Depends(get_db)):
+@user_router.post("/", response_model=UserProfileOutSchema)
+async def create_user(user_data: UserProfileCreateSchema, db:Session = Depends(get_db)):
     user_db = UserProfile(**user_data.dict())
     db.add(user_db)
     db.commit()
     db.refresh(user_db)
     return user_db
 
-@user_router.get("/", response_model=List[UserProfileSchema])
+@user_router.get("/", response_model=List[UserProfileOutSchema])
 async def list_user(db: Session = Depends(get_db)):
 
     return db.query(UserProfile).all()
 
 
-@user_router.get("/{user_id}/", response_model=UserProfileSchema)
+@user_router.get("/{user_id}/", response_model=UserProfileOutSchema)
 async def detail_user(user_id: int, db: Session = Depends(get_db)):
     user_db = db.query(UserProfile).filter(UserProfile.id==user_id).first()
     if user_db is None:
@@ -42,7 +42,7 @@ async def detail_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @user_router.put("/{user_id}/")
-async def update_user(user_data: UserProfileSchema, user_id: int, db: Session = Depends(get_db)):
+async def update_user(user_data: UserProfileOutSchema, user_id: int, db: Session = Depends(get_db)):
     user_db = db.query(UserProfile).filter(UserProfile.id == user_id).first()
     if not user_db:
         raise HTTPException(status_code=404, detail="Нету такого пользователя'")
