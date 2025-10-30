@@ -4,6 +4,8 @@ from app.db.schemas import CarSchema
 from app.db.database import SessionLocal
 from sqlalchemy.orm import Session
 from typing import List
+from fastapi import Query
+
 
 async def get_db():
     db = SessionLocal()
@@ -18,7 +20,7 @@ car_router = APIRouter(
 )
 
 @car_router.post('/create/', response_model=CarSchema)
-async def car_create(car: CarSchema, db: Session = Depends(get_db)):
+async def create_car(car: CarSchema, db: Session = Depends(get_db)):
     car_db = Car(**car.dict())
     db.add(car_db)
     db.commit()
@@ -26,9 +28,58 @@ async def car_create(car: CarSchema, db: Session = Depends(get_db)):
     return car_db
 
 
-@car_router.get('/car', response_model=List[CarSchema])
-async def last_car(db: Session = Depends(get_db)):
-   return db.query(Car).all()
+@car_router.get('/', response_model=List[CarSchema])
+async def list_car(db: Session = Depends(get_db),
+    year_from: int | None = Query(None),
+    year_to: int | None = Query(None),
+    mileage_max: int | None = Query(None),
+    status: str | None = Query(None),
+    brand: str | None = Query(None),
+    model: str | None = Query(None),
+    search: str | None = Query(None),
+    sort_by: str = Query("created_at"),
+    sort_order: str = Query("desc"),
+    limit: int = Query(20, ge=1),
+    offset: int = Query(0, ge=0),
+    ):
+
+
+    query = db.query(Car)
+
+    # фильтры
+    if year_from:
+        query = query.filter(Car.year >= year_from)
+    if year_to:
+        query = query.filter(Car.year <= year_to)
+    if mileage_max:
+        query = query.filter(Car.mileage <= mileage_max)
+    if status:
+        query = query.filter(Car.status == status)
+    if brand:
+        query = query.filter(Car.brand.ilike(f"%{brand}%"))
+    if model:
+        query = query.filter(Car.model.ilike(f"%{model}%"))
+
+    # поиск
+    if search:
+        query = query.filter(
+            (Car.name.ilike(f"%{search}%")) |
+            (Car.description.ilike(f"%{search}%"))
+        )
+
+    # сортировка
+    if sort_by in ["price", "year", "created_at"]:
+        column = getattr(Car, sort_by)
+        if sort_order == "desc":
+            column = column.desc()
+        query = query.order_by(column)
+
+    total = query.count()
+    results = query.offset(offset).limit(limit).all()
+
+    return {"total": total, "items": results}
+
+
 
 
 @car_router.get('/{car_id}/')
